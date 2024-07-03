@@ -3,11 +3,13 @@ import cors from "cors";
 import chalk from "chalk";
 import dotenv from "dotenv";
 import {
+  createTables,
   createCustomer,
   createRestaurant,
   createReservation,
-  readAllCustomers,
-  readAllRestaurants,
+  getReservations,
+  getCustomers,
+  getRestaurants,
 } from "./db.js";
 
 dotenv.config();
@@ -25,42 +27,50 @@ const startServer = async () => {
 startServer();
 
 app.get("/", (req, res) => {
-  res.send("Welcome to the Restaurant API!");
+  res.json({ message: "hello from the server" });
+});
+
+app.get("/create-tables", async (req, res) => {
+  await createTables();
+  res.json({ message: "tables created" });
+});
+
+app.get("/create-customer", async (req, res) => {
+  const { name } = req.query;
+  const customer = await createCustomer(name);
+  res.json(customer);
+});
+
+app.get("/create-restaurant", async (req, res) => {
+  const { name, capacity } = req.query;
+  const restaurant = await createRestaurant(name, capacity);
+  res.json(restaurant);
+});
+
+app.get("/create-reservation", async (req, res) => {
+  const { time, date, party_count, restaurant_id, customer_id } = req.query;
+  const reservation = await createReservation(
+    time,
+    date,
+    party_count,
+    restaurant_id,
+    customer_id
+  );
+  res.json(reservation);
+});
+
+app.get("/reservations", async (req, res) => {
+  const reservations = await getReservations();
+  res.json(reservations);
 });
 
 app.get("/customers", async (req, res) => {
-  const customers = await readAllCustomers();
+  const customers = await getCustomers();
   res.json(customers);
 });
 
 app.get("/restaurants", async (req, res) => {
-  const restaurants = await readAllRestaurants();
+  const restaurants = await getRestaurants();
   res.json(restaurants);
 });
 
-app.post("/customers", async (req, res) => {
-  const { name } = req.query;
-  const newCustomer = await createCustomer(name);
-  res.json(newCustomer);
-});
-
-app.post("/restaurants", async (req, res) => {
-  const { name, capacity } = req.query;
-  const newRestaurant = await createRestaurant(name, capacity);
-  res.json(newRestaurant);
-});
-
-app.post("/reservations", async (req, res) => {
-  const { time, people, restaurant_id, customer_id } = req.query;
-  const newReservation = await createReservation(
-    time,
-    people,
-    restaurant_id,
-    customer_id
-  );
-  res.json(newReservation);
-});
-
-app.get("*", (req, res) => {
-  res.send("Route not found");
-});
